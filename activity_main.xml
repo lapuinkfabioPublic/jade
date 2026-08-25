@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <!-- Título -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Controle IoT"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Status -->
+        <TextView
+            android:id="@+id/lblStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Desconectado"
+            android:textSize="16sp"
+            android:textColor="#FF0000"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Lâmpada 1 -->
+        <TextView
+            android:id="@+id/txtLamp01"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💡 Lâmpada 1"
+            android:textSize="18sp"
+            android:layout_marginTop="10dp" />
+
+        <SeekBar
+            android:id="@+id/bar1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="255"
+            android:progress="0" />
+
+        <TextView
+            android:id="@+id/txtValor1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0%"
+            android:textSize="14sp"
+            android:layout_marginBottom="15dp" />
+
+        <!-- Lâmpada 2 -->
+        <TextView
+            android:id="@+id/txtLamp02"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💡 Lâmpada 2"
+            android:textSize="18sp"
+            android:layout_marginTop="10dp" />
+
+        <SeekBar
+            android:id="@+id/bar2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="255"
+            android:progress="0" />
+
+        <TextView
+            android:id="@+id/txtValor2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0%"
+            android:textSize="14sp"
+            android:layout_marginBottom="15dp" />
+
+        <!-- Lâmpada 3 -->
+        <TextView
+            android:id="@+id/txtLamp03"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💡 Lâmpada 3"
+            android:textSize="18sp"
+            android:layout_marginTop="10dp" />
+
+        <SeekBar
+            android:id="@+id/bar3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="255"
+            android:progress="0" />
+
+        <TextView
+            android:id="@+id/txtValor3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0%"
+            android:textSize="14sp"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Sensores -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="#F0F0F0"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🌡️ Temperatura"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/txtTemperatura"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="-- °C"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="☀️ Luminosidade"
+                    android:textSize="14sp" />
+
+                <ProgressBar
+                    android:id="@+id/progressLuminosidade"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="20dp"
+                    android:max="1023"
+                    android:progress="0" />
+
+                <TextView
+                    android:id="@+id/txtLuminosidade"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Botões -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp">
+
+            <Button
+                android:id="@+id/btnConectar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🔗 Conectar"
+                android:layout_marginRight="8dp" />
+
+            <Button
+                android:id="@+id/btnDesconectar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🔌 Desconectar"
+                android:layout_marginLeft="8dp" />
+        </LinearLayout>
+
+        <!-- Botão Ligar/Desligar Todos -->
+        <Button
+            android:id="@+id/btnToggleAll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="💡 Ligar/Desligar Todos" />
+
+        <TextView
+            android:id="@+id/lblInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Arraste os sliders para controlar as lâmpadas"
+            android:textSize="12sp"
+            android:textColor="#888888"
+            android:layout_marginTop="20dp" />
+
+    </LinearLayout>
+</ScrollView>
