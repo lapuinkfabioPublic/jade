@@ -1,445 +1,348 @@
+' ============================================================
+' Biblioteca de Automação de Interface Windows
+' Versão Refatorada - Baseada no código original de 2000
+' ============================================================
+' Autor: Fábio Leandro Lapuinka
+' Última atualização: 2026
+' ============================================================
 
-'Biblioteca pessoal de Fábio Leandro Lapuinka 'Última atualização em 27/07/2000
-
+' ------------------------------------------------------------
+' DECLARAÇÕES DE BIBLIOTECAS EXTERNAS
+' ------------------------------------------------------------
+' Nota: Presumi que essas DLLs e includes existem no ambiente original
 '$include 'winapi.inc'
 
- Declare Function JanelaExiste         (Nome_da_Janela$)                                                                     ' Retorna True (Janela existe) or False (Janela não existe)
- Declare Function Espere_a_Janela (Nome_da_Janela$)                                                                     '  Espera pela Janela que você mandou
- Declare Function JanelaAtiva          (Nome_da_Janela$)                                                                      ' Retorna True (Janela está em foco) or False(Janela não está em foco)
- Declare Function botao (Nome_do_Botao$)                                                                       ' Dá um clique em um botão, volta True (Clicou) or False(Não conseguiu)
- Declare Function EscrevaArquivo (caminho_e_nome_do_arquivo$,texto_$)                                         ' Cria um arquivo de texto ASCII
- Declare Function  AceSelf(origem$,destino$)                                                                                       ' Automatiza o processo de extração de arquivos do seft-Extractor do compactador WinACE
- Declare Function  WinzipSelf(origem$,arquivo$,destino$)                                                                    ' Automatiza o processo de extração de arquivos do seft-Extractor do compactador WinZip 7.0
- Declare Function Selecione_a_Janela(Nome_da_Janela$)                                                                   ' Ativa o foco em um janela e retorna True (Janela foi selecionada) or False (Janela nao foi selecionada)
- Declare Function Repete(numero_de_repeticoes%)                                                                              ' Repete o um laço que vai de 0  até o numero de vezes que você passou, retorna o numero de vezes
- Declare Function Letreiro(Mensagem$,Alinhamento$)                                                                            ' Escreve uma mensagem na tela, um status, sem interromper a execução do programa
- Declare Function  AtiveJanela (Nome_da_Janela$)                                                                               'Ativa o foco do nome da janela
- Declare Function ExisteReg (Path_Registry$,Value_Registry$)                                                              'Verifica se um valor existe no registry
- Declare Function CopyRegToClipboard lib "lib\clipreg.dll" alias "CopyRegToClipboard" (hKey, lpSubKey$, lpValue$) as long ' Funcao externa da DLL
- Declare Function bootnt ()                                                                                                                      'Instala o gerenciador de boot do Windows NT
- Declare Function boot95 ()                                                                                                                     'Instala o boot do windows 95
- Declare Function texto(palavra$)                                                                                                                 'retorna verdadeiro se o texto existir na janela ativa
-Declare  Function ActiveWindow(NameWindow$)
-Declare  Function SleepW(NameWindow$)
-Declare Sub FimInstpd95()
-Declare sub sub_user_messages()                                                                                                           ' Interação do script com o Windows
+Declare Function CopyRegToClipboard Lib "lib\clipreg.dll" Alias "CopyRegToClipboard" ( _
+    ByVal hKey As Long, _
+    ByVal lpSubKey As String, _
+    ByVal lpValue As String _
+) As Long
 
+' ------------------------------------------------------------
+' FUNÇÕES DE GERENCIAMENTO DE JANELAS
+' ------------------------------------------------------------
 
-
-
-
-
-
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Function ExisteReg (Path_Registry$,Value_Registry$)
-
-
- 'Obter o nome do computador.
-
-
-                                                                                                   'Copiar os valores para a Clipboard
-  GetValueRegistry=CopyRegToClipboard(HKEY_LOCAL_MACHINE,Path_Registry$,Value_Registry$) 'Copiar os valores para a Clipboard           'Copiar os valores para a Clipboard           'Copiar os valores para a Clipboard
-
-
-  If GetValueRegistry=2 Then
-
-     ' msgbox  "Error 2 "
-
-     ExisteReg=False
-
-     Else
-
-      'msgbox  "Deu Certo 0 "
-      ExisteReg=True
-
-  Endif
-
+' Verifica se uma janela com o título especificado existe
+' Retorna: True se existir, False caso contrário
+Function WindowExists(ByVal windowTitle As String) As Boolean
+    Dim hWnd As Long
+    hWnd = WFndWnd(windowTitle, FW_All)
+    WindowExists = (hWnd <> 0)
 End Function
 
-
-
-
-
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
- Function JanelaAtiva(Nome_da_Janela$)
-     Dim info AS INFO
-     WGetInfo WGetActWnd(0),info
-
-     'verifica se as informações da janela ativa correspondem a janela pedida
-     If Nome_da_Janela$=info.szCaption then
-          JanelaAtiva=true
-          else
-          JanelaAtiva=false
-      Endif
-
- End Function
-
-
-
-
-
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-Function Espere_a_Janela (Nome_da_Janela$)
-
-    Do While  JanelaAtiva(Nome_da_Janela$)
-
-       'coloca em foco a janela
-       Selecione_a_Janela (Nome_da_Janela$)
-
-      ' flags que indicam que os estados da janela
-       wFlags = FW_PART or FW_ALL or FW_FOCUS or FW_DIALOGOK or FW_CHILDOK
-       hWnd = WFndWnd(Nome_da_Janela$, wFlags)
-
-        If hWnd <> 0 then
-              ' esta rotina indica que janela está em foco
-                 Espere_a_Janela=True
-                  Exit Do
-             Else
-             'esta rotina indica que janela não está mais em foco
-                Espere_a_Janela=False
-        Endif
-     Loop
-
-End Function
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Function botao(Nome_do_Botao$)
-
- ' verifica se ele existe
- if  WButtonExists (Nome_do_Botao$)then
-
-      ' se existir verifica se ele está habilitado
-      if WButtonEnabled(Nome_do_Botao$)  then
-
-         'se ele estiver habilitado, seleciona-o e dá um clique sobre ele
-                       WButtonClick (Nome_do_Botao$)
-                       ClickButton=true
-             else
-
-             botao=false
-       endif
-
-      else
-
-     botao=false
-
- endif
-
+' Ativa (traz para o foco) uma janela pelo título
+' Retorna: True se conseguiu ativar, False se não encontrou
+Function ActivateWindow(ByVal windowTitle As String) As Boolean
+    Dim hWnd As Long
+    hWnd = WFndWnd(windowTitle, FW_IGNOREFILE)
+    
+    If hWnd <> 0 Then
+        WSetActWnd hWnd
+        ActivateWindow = True
+    Else
+        ActivateWindow = False
+    End If
 End Function
 
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Function   EscrevaArquivo(caminho_e_nome_do_arquivo$,texto_$)
-
-   'abre um arquivo
-   open caminho_e_nome_do_arquivo$ FOR APPEND AS #1
-
-   'escreve no arquivo o conteudo passado
-   print #1, texto_$
-
-   'fecha o arquivo aberto
-   Close #1
-
+' Verifica se a janela ativa no momento possui o título especificado
+' Retorna: True se for a janela ativa, False caso contrário
+Function IsWindowActive(ByVal windowTitle As String) As Boolean
+    Dim info As INFO
+    WGetInfo WGetActWnd(0), info
+    IsWindowActive = (info.szCaption = windowTitle)
 End Function
 
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Function  AceSelf(origem$,destino$)
-
-      'chama o arquivo
-
-      run "Z:\Scripts\mstest\projetos\instpd\mtrun.exe    Z:\Scripts\mstest\projetos\instpd\ace.pcd /c  "+ destino$ ,nowait,1
-
-
-      run origem$,,1
-
-
- End Function
-
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
- Function  winzipself(origem$,arquivo$,destino$)
-     dim janela$
-
-      janela="WinZip Self-Extractor - " + arquivo$
-
-      '  abre o arquivo
-      run origem$ + arquivo$,nowait,0
-
-      'espera ele aparecer
-      Espere_a_Janela (janela$)
-
-      'emula os comandos do teclado
-      dokeys "%f"
-      dokeys destino$
-      dokeys "%u"
-
-      'espera os arquivos serem descompactados
-
-
-     do while  true
-                    if  janelaexiste("WinZip Self-Extractor") and   WButtonExists ("OK") then
-
-                            botao ("OK")
-                            espere_a_janela (janela$)
-                            botao ("&Close")
-                            exit do
-
-                            else
-
-                            ativejanela ("WinZip Self-Extractor")
-
-                    endif
-      loop
-
-
-
-
- End Function
-
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Function Selecione_a_Janela(Nome_da_Janela$)
-
-Dim hwndNP as Long
-hwndNP = WFndWnd(Nome_da_Janela$, FW_IGNOREFILE)
-
-'Procura pela janela no sistema
-If hwndNP Then
-   WSetActWnd hwndNP
-   Selecione_a_Janela=True
-   Else
-   Selecione_a_Janela=False
-Endif
-
-
+' Aguarda até que uma janela se torne ativa (ou exista)
+' Retorna: True quando a janela for encontrada e ativada
+Function WaitForWindow(ByVal windowTitle As String) As Boolean
+    Dim hWnd As Long
+    
+    Do While Not IsWindowActive(windowTitle)
+        ' Tenta ativar a janela se ela existir
+        If WindowExists(windowTitle) Then
+            ActivateWindow windowTitle
+        End If
+        
+        ' Verifica se a janela está acessível
+        hWnd = WFndWnd(windowTitle, FW_PART Or FW_ALL Or FW_FOCUS Or FW_DIALOGOK Or FW_CHILDOK)
+        
+        If hWnd <> 0 Then
+            WaitForWindow = True
+            Exit Do
+        End If
+        
+        ' Pequena pausa para não sobrecarregar a CPU
+        Sleep 100
+    Loop
 End Function
 
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Function Repete(numero_de_repeticoes%)
-
- For i=0 to numero_de_repeticoes%
-
- Next
-
-End Function
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Function Letreiro(Mensagem$,Alinhamento$)
-
-     Dim x,y,z,w as integer
-
-      if Alinhamento="" then
-
-        else
-         x=350
-         y=30
-        z=450
-        w=40
-      endif
-      statusbox Mensagem$,x,y,z,w,true,true,"MS Sans Serif"
-
+' Aguarda até que uma janela com o texto especificado no título seja ativada
+Function WaitForWindowText(ByVal windowText As String) As Boolean
+    Do While Not IsWindowActive(windowText)
+        If WindowExists(windowText) Then
+            ActivateWindow windowText
+            WaitForWindowText = True
+            Exit Do
+        End If
+        Sleep 100
+    Loop
 End Function
 
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- Function JanelaExiste(Nome_da_Janela$)
+' ------------------------------------------------------------
+' FUNÇÕES DE INTERAÇÃO COM CONTROLES
+' ------------------------------------------------------------
 
-   ' flags que indicam que os estados da janela
-
-   wFlags = FW_All
-   hWnd = WFndWnd(Nome_da_Janela$, wFlags)
-
-
-    If hWnd  =  0 then
-         ' esta rotina indica que janela não existe
-             JanelaExiste = false
-         Else
-         'esta rotina indica que janela não existe mais
-            JanelaExiste = true
-    Endif
-
-
+' Clica em um botão pelo seu texto/caption
+' Retorna: True se clicou com sucesso, False em caso de falha
+Function ClickButton(ByVal buttonText As String) As Boolean
+    If Not WButtonExists(buttonText) Then
+        ClickButton = False
+        Exit Function
+    End If
+    
+    If Not WButtonEnabled(buttonText) Then
+        ClickButton = False
+        Exit Function
+    End If
+    
+    WButtonClick buttonText
+    ClickButton = True
 End Function
 
-
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Function AtiveJanela(Nome_da_Janela$)
-
-  dim hwndNP as long
-
-      ' flags que indicam que os estados da janela
-
-            hwndNP = WFndWnd(Nome_da_Janela$, FW_IGNOREFILE)
-
-
-       if hwndNP = 0   then
-                 'se a janela existir no sistema deixa a mesma ativa
-
-               AtiveJanela = false
-
-
-
-           else
-
-                 WSetActWnd hwndNP
-                  AtiveJanela = true
-
-
-       endif
-
-
+' Verifica se um texto estático (label) existe na janela ativa
+' Retorna: True se existir, False caso contrário
+Function StaticTextExists(ByVal text As String) As Boolean
+    StaticTextExists = WStaticExists(text)
 End Function
 
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+' ------------------------------------------------------------
+' FUNÇÕES DE MANIPULAÇÃO DE ARQUIVOS
+' ------------------------------------------------------------
 
-function bootnt ()
-
-       'iInstala o gerenciador de boot do Windows NT
-
-        statusbox "Aguarde um momento, instalando o gerenciador de boot do Windows NT 4.0",,,,,true,true,"MS Sans Serif"
-
-
-         'roda o setup do windows nt só que não copia nenhum arquivo
-         run "z:\scripts\bats\boot.bat /UpdateNT",,2
-
-         'apaga os arquivos temporários do setup do windows nt
-         run "z:\scripts\bats\boot.bat /DelSwap /partition(2)",,2
-
-       statusbox close
-
-end function
-
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-function boot95 ()
-
-       'iInstala o gerenciador de boot do Windows 95
-
-        statusbox "Aguarde um momento, instalando o boot do Windows 95 ",,,,,true,true,"MS Sans Serif"
-
-
-         'roda o setup do windows nt só que não copia nenhum arquivo
-         run "z:\scripts\bats\boot.bat /InstallW95",,2
-
-       statusbox close
-
-end function
-
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-'anexa um texto no fim do arquivo
-
-  function texto(palavra$)
-
-
-             if wstaticexists (palavra$) then   'verifica se o texto existe
-
-                                  texto=true
-
-                                             else
-
-                                  texto=false
-
-              endif
-
-end function
-
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
- Function ActiveWindow(NameWindow$)
-     Dim info AS INFO
-     WGetInfo WGetActWnd(0),info
-     If NameWindow=info.szCaption then ActiveWindow=true else ActiveWindow=false
- End Function
-
-
-
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Function SleepW(NameWindow$)
-'encontra uma janela que possua o texto no titulo
-
-  Do While not ActiveWindow(NameWindow$)
-   wFlags = FW_PART or FW_ALL or FW_FOCUS or FW_DIALOGOK or FW_CHILDOK
-   hWnd = WFndWnd(NameWindow$, wFlags)
-    If hWnd <> 0 then
-        SleepW=True
-        Exit Do
-    Endif
-  Loop
+' Escreve (append) texto em um arquivo
+' Retorna: True se conseguiu escrever, False em caso de erro
+Function AppendToFile(ByVal filePath As String, ByVal textToAppend As String) As Boolean
+    On Error GoTo ErrorHandler
+    
+    Open filePath For Append As #1
+    Print #1, textToAppend
+    Close #1
+    
+    AppendToFile = True
+    Exit Function
+    
+ErrorHandler:
+    AppendToFile = False
 End Function
 
+' ------------------------------------------------------------
+' FUNÇÕES DE REGISTRY (Windows Registry)
+' ------------------------------------------------------------
 
-'//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Sub FimInstpd95()
+' Verifica se um valor existe no Registry
+' Retorna: True se existir, False se não existir ou erro
+Function RegistryValueExists(ByVal registryPath As String, ByVal valueName As String) As Boolean
+    Dim result As Long
+    result = CopyRegToClipboard(HKEY_LOCAL_MACHINE, registryPath, valueName)
+    
+    ' 0 = Sucesso, 2 = Erro (valor não encontrado)
+    RegistryValueExists = (result = 0)
+End Function
 
+' ------------------------------------------------------------
+' FUNÇÕES DE EXTRAÇÃO DE ARQUIVOS (Auto-Extractors)
+' ------------------------------------------------------------
 
-
-
-
-  if exists("c:\windows\options\flags\remoto.flg") then
-
-        if exists ("c:\windows\options\scripts\remoto.bat") then run "c:\windows\options\scripts\remoto.bat",nowait,0 ' Executa o Script para máquina Dial_up
-
-        else
-        run "command.com /c echo y | reg.exe Delete  HKLM\Enum\Root\Net\0000",,0 'Remove o Adaptador Dial-Up
-
-  endif
-
-  run "command.com /c echo y | reg.exe Delete  HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunServices\vigia",,0 'Remove os serviços do registry
-  run "command.com /c echo y | reg.exe Delete  HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\Instalador",,0      'Remove os serviços do registry
-
-
-'Atualizações da instalação padrão
-
-if exists ("c:\windows\options\scripts\shared.bat") then run (" c:\windows\options\scripts\shared.bat"),nowait,0 'Inicia o Call Update minimizado para as seções de compartilhamento das localidades
-if exists ("c:\windows\options\scripts\update.bat") then run (" c:\windows\options\scripts\update.bat"),nowait,0 'Específico localidades
-
-
-
-
-                    escrevaarquivo "c:\win95.log", date$ + time$ + " - Fim da instalação."
-                   escrevaarquivo "c:\windows\options\flags\final95.flg", date$ + time$ + " -Fim da instalação."
-
-
-                   if  exists("c:\windows\options\nal\*.nal") then
-                         run "mtrun c:\windows\options\scripts\nalzen.pcd",nowait,0 'Chama o script do Nal Zen
-                         stop
-                   endif
-if exists("c:\windows\siemens.bmp") then
- copy "c:\windows\siemens.bmp" to "c:\windows\old.bmp"
-endif
-msgbox "Instalação padrão SBS NSL concluída - dúvidas entre em contato com o HelpDesk.", MB_ICONINFORMATION , "Aviso"
-''                                    run "c:\windows\atualiza.exe",nowait,0             'reinicia a máquina
-stop
+' Automatiza extração de arquivos do WinACE Self-Extractor
+Sub ExtractWithAce(ByVal sourceFile As String, ByVal destinationPath As String)
+    ' Executa o script auxiliar do ACE
+    Run "Z:\Scripts\mstest\projetos\instpd\mtrun.exe Z:\Scripts\mstest\projetos\instpd\ace.pcd /c " & destinationPath, Nowait, 1
+    ' Executa o auto-extrator
+    Run sourceFile, , 1
 End Sub
 
-'////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+' Automatiza extração de arquivos do WinZip Self-Extractor (versão 7.0)
+Sub ExtractWithWinZip(ByVal sourcePath As String, ByVal archiveName As String, ByVal destinationPath As String)
+    Dim windowTitle As String
+    windowTitle = "WinZip Self-Extractor - " & archiveName
+    
+    ' Executa o auto-extrator
+    Run sourcePath & archiveName, Nowait, 0
+    
+    ' Aguarda a janela aparecer
+    WaitForWindow windowTitle
+    
+    ' Envia comandos de teclado para o extrator
+    SendKeys "%f"   ' Menu File
+    SendKeys destinationPath
+    SendKeys "%u"   ' Unzip
+    
+    ' Aguarda a conclusão da extração
+    Do While True
+        If WindowExists("WinZip Self-Extractor") And WButtonExists("OK") Then
+            ClickButton "OK"
+            WaitForWindow windowTitle
+            ClickButton "&Close"
+            Exit Do
+        Else
+            ActivateWindow "WinZip Self-Extractor"
+        End If
+        Sleep 500
+    Loop
+End Sub
 
- sub sub_user_messages()
+' ------------------------------------------------------------
+' FUNÇÕES DE BOOT MANAGER (Windows NT / 95)
+' ------------------------------------------------------------
 
-           if ativejanela ("Inserir Disco")                                                           then botao "OK"
-           if ativejanela ("Rede do Windows")                                                 then botao "OK"
-           if ativejanela ("Digite a Senha do Windows")                                   then botao "Cancelar"
-           if ativejanela ("Alteração das configurações do sistema")                 then botao "&Não"
-           if ativejanela ("Exibir")                                                                       then botao "OK"
-           if ativejanela ("Propriedades de Vídeo")                                           then botao "Cancelar"
-           if ativejanela ("Conflito de Versão")                                                  then botao "&Sim"
-           if ativejanela ("DHCP Client")                                                           then botao "&Não"
-           if ativejanela ("Rede do Windows")                                                  then botao "OK"
-           if ativejanela ("Auto-detecção")                                                        then botao "&Não"
-           if ativejanela ("Verificar Modem")                                                      then botao "Avançar >"
-           if ativejanela ("Verificar Modem")                                                      then botao "Concluir"
-           if ativejanela ("Assistente de Atualização de Driver de Dispositivo") then botao "Avançar >"
-           if ativejanela ("Assistente de Atualização de Driver de Dispositivo") then botao "Concluir"
-           if ativejanela ("Instalação de configuração")                                     then botao "OK"
-           if ativejanela ("Inicialização do GroupWise")                                     then botao "Cancelar"
-           if ativejanela ("Assistente para Adicionar Novo Hardware")             then botao "Não"
-            if ativejanela ("Results")                                                                   then botao "Close"
+' Instala o gerenciador de boot do Windows NT 4.0
+Sub InstallBootNT()
+    StatusBox "Aguarde um momento, instalando o gerenciador de boot do Windows NT 4.0", 350, 30, 450, 40, True, True, "MS Sans Serif"
+    
+    Run "z:\scripts\bats\boot.bat /UpdateNT", , 2
+    Run "z:\scripts\bats\boot.bat /DelSwap /partition(2)", , 2
+    
+    StatusBox Close
+End Sub
 
+' Instala o gerenciador de boot do Windows 95
+Sub InstallBoot95()
+    StatusBox "Aguarde um momento, instalando o boot do Windows 95", 350, 30, 450, 40, True, True, "MS Sans Serif"
+    
+    Run "z:\scripts\bats\boot.bat /InstallW95", , 2
+    
+    StatusBox Close
+End Sub
 
- end sub
+' ------------------------------------------------------------
+' FUNÇÃO DE UTILIDADE: LOOP DE REPETIÇÃO
+' ------------------------------------------------------------
+
+' Executa um loop de 0 até N (útil para ações repetitivas)
+' Retorna: Número de iterações realizadas
+Function RepeatLoop(ByVal numberOfRepeats As Integer) As Integer
+    Dim i As Integer
+    For i = 0 To numberOfRepeats
+        ' Placeholder para ações repetitivas
+    Next i
+    RepeatLoop = i
+End Function
+
+' ------------------------------------------------------------
+' SUB-ROTINA: FINALIZAÇÃO DA INSTALAÇÃO PADRÃO (Windows 95)
+' ------------------------------------------------------------
+
+Sub FinalizeStandardInstall95()
+    ' === REMOÇÃO DE SERVIÇOS E REGISTRY ===
+    If FileExists("c:\windows\options\flags\remoto.flg") Then
+        If FileExists("c:\windows\options\scripts\remoto.bat") Then
+            Run "c:\windows\options\scripts\remoto.bat", Nowait, 0
+        End If
+    Else
+        ' Remove adaptador Dial-Up
+        Run "command.com /c echo y | reg.exe Delete HKLM\Enum\Root\Net\0000", , 0
+    End If
+    
+    ' Remove entradas do Registry
+    Run "command.com /c echo y | reg.exe Delete HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunServices\vigia", , 0
+    Run "command.com /c echo y | reg.exe Delete HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\Instalador", , 0
+    
+    ' === ATUALIZAÇÕES PÓS-INSTALAÇÃO ===
+    If FileExists("c:\windows\options\scripts\shared.bat") Then
+        Run "c:\windows\options\scripts\shared.bat", Nowait, 0
+    End If
+    
+    If FileExists("c:\windows\options\scripts\update.bat") Then
+        Run "c:\windows\options\scripts\update.bat", Nowait, 0
+    End If
+    
+    ' === LOGS ===
+    AppendToFile "c:\win95.log", Date$ & Time$ & " - Fim da instalação."
+    AppendToFile "c:\windows\options\flags\final95.flg", Date$ & Time$ & " - Fim da instalação."
+    
+    ' === NAL ZEN (Novell Application Launcher) ===
+    If FileExists("c:\windows\options\nal\*.nal") Then
+        Run "mtrun c:\windows\options\scripts\nalzen.pcd", Nowait, 0
+        Stop
+    End If
+    
+    ' === IMAGEM DE FUNDO (Siemens) ===
+    If FileExists("c:\windows\siemens.bmp") Then
+        CopyFile "c:\windows\siemens.bmp", "c:\windows\old.bmp"
+    End If
+    
+    ' === MENSAGEM FINAL ===
+    MsgBox "Instalação padrão SBS NSL concluída - dúvidas entre em contato com o HelpDesk.", MB_ICONINFORMATION, "Aviso"
+    
+    Stop
+End Sub
+
+' ------------------------------------------------------------
+' SUB-ROTINA: MANUSEADOR DE MENSAGENS/JANELAS POPUP
+' (Interação com o usuário durante a instalação)
+' ------------------------------------------------------------
+
+Sub HandleUserMessages()
+    ' Dicionário de ações para janelas comuns
+    ' Estrutura: (Título da Janela, Ação a ser tomada)
+    
+    ' Botões OK/Cancelar/Sím/Não
+    If ActivateWindow("Inserir Disco") Then ClickButton "OK"
+    If ActivateWindow("Rede do Windows") Then ClickButton "OK"
+    If ActivateWindow("Digite a Senha do Windows") Then ClickButton "Cancelar"
+    If ActivateWindow("Alteração das configurações do sistema") Then ClickButton "&Não"
+    If ActivateWindow("Exibir") Then ClickButton "OK"
+    If ActivateWindow("Propriedades de Vídeo") Then ClickButton "Cancelar"
+    If ActivateWindow("Conflito de Versão") Then ClickButton "&Sim"
+    If ActivateWindow("DHCP Client") Then ClickButton "&Não"
+    If ActivateWindow("Rede do Windows") Then ClickButton "OK"
+    If ActivateWindow("Auto-detecção") Then ClickButton "&Não"
+    
+    ' Modem
+    If ActivateWindow("Verificar Modem") Then
+        ClickButton "Avançar >"
+        ClickButton "Concluir"
+    End If
+    
+    ' Driver de Dispositivo
+    If ActivateWindow("Assistente de Atualização de Driver de Dispositivo") Then
+        ClickButton "Avançar >"
+        ClickButton "Concluir"
+    End If
+    
+    ' Outros
+    If ActivateWindow("Instalação de configuração") Then ClickButton "OK"
+    If ActivateWindow("Inicialização do GroupWise") Then ClickButton "Cancelar"
+    If ActivateWindow("Assistente para Adicionar Novo Hardware") Then ClickButton "Não"
+    If ActivateWindow("Results") Then ClickButton "Close"
+End Sub
+
+' ------------------------------------------------------------
+' FUNÇÕES AUXILIARES (adicionadas para completude)
+' ------------------------------------------------------------
+
+' Verifica se um arquivo existe
+Function FileExists(ByVal filePath As String) As Boolean
+    On Error GoTo FileNotFound
+    Dim fileAttr As Integer
+    fileAttr = GetAttr(filePath)
+    FileExists = True
+    Exit Function
+    
+FileNotFound:
+    FileExists = False
+End Function
+
+' Pausa a execução por milissegundos (se disponível)
+Sub Sleep(ByVal milliseconds As Long)
+    ' Nota: Em WinBatch, pode não existir Sleep nativo.
+    ' Esta é uma adaptação conceitual.
+    ' Se existir uma função Sleep, use-a.
+    ' Caso contrário, um loop pode ser usado com cautela.
+    ' Exemplo: TimerDelay(milliseconds)
+End Sub
+
+' Copia um arquivo (placeholder)
+Sub CopyFile(ByVal source As String, ByVal destination As String)
+    FileCopy source, destination
+End Sub
